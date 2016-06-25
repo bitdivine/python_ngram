@@ -139,7 +139,7 @@ def parse_file(file):
 	Generate a sequence of words in a file.
 	"""
 	for line in file:
-		for match in re.findall(r'\s*(\S+)', line):
+		for match in re.findall(r'\W*(\w+)', line):
 			yield match
 
 def lowercase(words):
