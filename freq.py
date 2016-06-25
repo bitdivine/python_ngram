@@ -176,6 +176,9 @@ def main_test(args):
 	print "All tests complete"
 
 def main_count_ngram_range(args):
+	"""
+	Command line application of count_ngram_range:  This finds the frequency of each ngram for a range of lengths.
+	"""
 	words = get_words(args)
 	ans = count_ngram_range(words, args['nmin'], args['nmax'])
 	printout_header()
@@ -184,6 +187,9 @@ def main_count_ngram_range(args):
 			printout(length, freq, ' '.join(tuple))
 
 def main_top_ngrams_range(args):
+	"""
+	Command line application of top_ngrams_range:  This finds the most popular ngrams for a range of lengths.
+	"""
 	words = get_words(args)
 	ans = top_ngrams_range(words, args['nmin'], args['nmax'], args['top'])
 	printout_header()
