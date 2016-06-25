@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 """
 Count the frequency of word tuples.
@@ -12,6 +12,7 @@ Usage:	freq.py                    [--clean] [--merge] [INFILE]
 Where:
 	--length L may be a single number or a range, such as 2:5
 	--clean  puts the strings into a cononical form by lowercasing.
+	--merge  merges similar words using Levenshtein distance as a ratio of length.
 
 Output:
 	length	freq	tuple
