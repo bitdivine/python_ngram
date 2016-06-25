@@ -3,7 +3,7 @@
 """
 Count the frequency of word tuples.
 
-Usage:	freq.py [INFILE]
+Usage:	freq.py                    [--clean] [--merge] [INFILE]
 	freq.py freq   --length L  [--clean] [--merge] [INFILE]
 	freq.py top N  --length L  [--clean] [--merge] [INFILE]
 	freq.py --test
@@ -11,7 +11,7 @@ Usage:	freq.py [INFILE]
 
 Where:
 	--length L may be a single number or a range, such as 2:5
-	--clean removes non-alphanumeric characters and makes the strings lowercase.
+	--clean  puts the strings into a cononical form by lowercasing.
 
 Output:
 	length	freq	tuple
@@ -164,6 +164,8 @@ def main_test(args):
 
 def main_count_ngram_range(args):
 	words = parse_file(args['infile'])
+	if args['clean']:
+		words = lowercase(words)
 	ans = count_ngram_range(words, args['nmin'], args['nmax'])
 	printout_header()
 	for length, freqs in ans.iteritems():
@@ -172,6 +174,8 @@ def main_count_ngram_range(args):
 
 def main_top_ngrams_range(args):
 	words = parse_file(args['infile'])
+	if args['clean']:
+		words = lowercase(words)
 	ans = top_ngrams_range(words, args['nmin'], args['nmax'], args['top'])
 	printout_header()
 	for length, freqs in ans.iteritems():
@@ -232,7 +236,7 @@ def get_cli_arguments():
 	else:
 		action = main_top_ngrams_range
 
-	return { 'infile':infile, 'nmin':nmin, 'nmax':nmax, 'top':top, 'action':action}
+	return { 'infile':infile, 'nmin':nmin, 'nmax':nmax, 'top':top, 'action':action, 'clean':arguments['--clean']}
 	
 if __name__ == '__main__':
 	arguments = get_cli_arguments()
