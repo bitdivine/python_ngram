@@ -142,6 +142,17 @@ def parse_file(file):
 		for match in re.findall(r'\W*(\w+)', line):
 			yield match
 
+def get_words(args):
+	"""
+	Get  stream of words, cleaned as dictated by the command line arguments.
+	"""
+	words = parse_file(args['infile'])
+	if args['clean']:
+		words = lowercase(words)
+	if args['merge']:
+		words = merge_similar_words(words)
+	return words
+
 def lowercase(words):
 	"""
 	This gives words in a canonical form:
@@ -160,12 +171,11 @@ def main_test(args):
 	test_count_ngram_range()
 	test_parse_file()
 	test_top_n()
+	test_similar_word()
 	print "All tests complete"
 
 def main_count_ngram_range(args):
-	words = parse_file(args['infile'])
-	if args['clean']:
-		words = lowercase(words)
+	words = get_words(args)
 	ans = count_ngram_range(words, args['nmin'], args['nmax'])
 	printout_header()
 	for length, freqs in ans.iteritems():
@@ -173,9 +183,7 @@ def main_count_ngram_range(args):
 			printout(length, freq, ' '.join(tuple))
 
 def main_top_ngrams_range(args):
-	words = parse_file(args['infile'])
-	if args['clean']:
-		words = lowercase(words)
+	words = get_words(args)
 	ans = top_ngrams_range(words, args['nmin'], args['nmax'], args['top'])
 	printout_header()
 	for length, freqs in ans.iteritems():
@@ -188,6 +196,58 @@ def bail(message):
 	"""
 	print >> sys.stderr, message
 	exit(1)
+
+def test_similar_word():
+	print "Test: similar word"
+	assert 0.5 < similarity('the', 'tree') < 0.6
+	assert 0.2 < similarity('the', 'monkeypuzzletree') < 0.3
+	assert 0.2 < similarity('monkeypuzzletree','treaty') < 0.3
+
+def similarity(word1, word2):
+	"""
+	Computes similarity by:
+		 2 * (longest common subsequence)
+		----------------------------------
+		   len(word1)   + len(word2)
+	"""
+	grid = [ [ 0 for i in xrange(-1, len(word2)) ] for i in xrange(-1, len(word1)) ]
+	for i in xrange(1, len(word1)+1):
+		for j in xrange(1, len(word2)+1):
+			if (word1[i-1] == word2[j-1]):
+				grid[i][j] = 1+grid[i-1][j-1]
+			else:	grid[i][j] = max( grid[i][j-1], grid[i-1][j] )
+	longest = grid[-1][-1]
+	return longest * 2.0 / (len(word1) + len(word2))
+
+def sign(n):
+	"""
+	Return:
+		 1 if n is positive
+		 0 if n is zero
+		-1 if n is negative
+	"""
+	if n < 0: return -1
+	if n > 0: return 1
+	return 0
+
+def merge_similar_words(source):
+	"""
+	Given a stream of words, generate another stream that is identical except that
+	words have been replaced by previous words, if similar enough.
+	"""
+	dict = {}  # Output words
+	root = {}  # Mapping from input words to output words
+
+	for word in source:
+		if word not in root:
+			similar_words = [(known, similarity(word, known)) for known in dict if similarity(word, known) > 0.5]
+			similar_words.sort(lambda a, b: sign(b[1] - a[1]))
+			if len(similar_words) == 0:
+				dict[word] = word
+				root[word] = word
+			else:
+				root[word] = similar_words[0][0]
+		yield root[word]
 
 def get_cli_arguments():
 	"""
@@ -234,9 +294,11 @@ def get_cli_arguments():
 	elif arguments['top']:
 		action = main_top_ngrams_range
 	else:
+		top = 10
+		nmin, nmax = 2, 5
 		action = main_top_ngrams_range
 
-	return { 'infile':infile, 'nmin':nmin, 'nmax':nmax, 'top':top, 'action':action, 'clean':arguments['--clean']}
+	return { 'infile':infile, 'nmin':nmin, 'nmax':nmax, 'top':top, 'action':action, 'clean':arguments['--clean'], 'merge':arguments['--merge']}
 	
 if __name__ == '__main__':
 	arguments = get_cli_arguments()
